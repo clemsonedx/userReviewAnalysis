@@ -1,5 +1,6 @@
 #!/usr/bin/python2.7
 
+import re
 import sys
 import difflib
 import urllib2
@@ -21,14 +22,11 @@ def handleArgs():
 def main():
 	course =  handleArgs().src
 	rp = urllib2.urlopen(course + "?page=1#reviews").read()
-	i = 2;
-	while True:
-		rpnext = urllib2.urlopen(course + "?page=$i#reviews").read()
-		print(rp)
-		if True:
-			break
-		i += 1
-		rp = rpnext
+	pcount = int(re.search('(?<=name\=\"num_pages\" value\=\").*(?=\" /\>)', rp, re.MULTILINE).group())
+	print pcount
+	for i in range(1, pcount + 1):
+		print i
+		rp = urllib2.urlopen(course + "?page=$i#reviews").read()
 
 if __name__ == "__main__":
 	sys.exit(main())
