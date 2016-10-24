@@ -2,9 +2,9 @@
 
 import re
 import sys
-import difflib
-import urllib2
 import argparse
+from lxml import html
+import requests
 
 class Usage(Exception):
 	def __init__(self, msg):
@@ -21,12 +21,19 @@ def handleArgs():
 
 def main():
 	course =  handleArgs().src
-	rp = urllib2.urlopen(course + "?page=1#reviews").read()
-	pcount = int(re.search('(?<=name\=\"num_pages\" value\=\").*(?=\" /\>)', rp, re.MULTILINE).group())
+	rp = html.fromstring(requests.get(course + "?page=1#reviews").content)
+	pcount = int(rp.xpath('//input[@name="num_pages"]/@value')[0])
 	print pcount
+
 	for i in range(1, pcount + 1):
-		print i
-		rp = urllib2.urlopen(course + "?page=$i#reviews").read()
+		studentNames = rp.xpath('//p[@class="userinfo__username"]/text()')
+		studentNames = [re.sub(r'[ \r\t\n]+', '', sn) for sn in studentNames]
+		for i in range(0, len(studentNames)):
+			if not studentNames[i]:
+				studentNames[i] = "Student"
+		print studentNames
+		break
+
 
 if __name__ == "__main__":
 	sys.exit(main())
