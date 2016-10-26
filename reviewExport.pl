@@ -18,7 +18,8 @@ def handleArgs():
 	"""
 	parser = argparse.ArgumentParser(description=descStr)
 	group = parser.add_argument_group()
-	group.add_argument('-s', dest='src', required=True)
+	group.add_argument('-s', dest='src', required=True, help="like to course review page (any)")
+	group.add_argument('-n', dest='fname', required=False, help="output file name")
 	return parser.parse_args()
 
 def fixString(c):
@@ -33,9 +34,13 @@ def fixString(c):
 	return nc
 
 def main():
-	course =  handleArgs().src
-	rp = html.fromstring(requests.get(course + "?page=1#reviews").content)
+	args = handleArgs()
+	course =  args.src
+	rp = html.fromstring(requests.get(course).content)
 	pcount = int(rp.xpath('//input[@name="num_pages"]/@value')[0])
+	
+	course = re.sub(r'#reviews', '', course)
+	course = re.sub(r'\?page\=[0-9]+', '', course)
 
 	studentNames = []
 	ratings = []
@@ -83,7 +88,10 @@ def main():
 		bodies.extend(bodiesTemp)
 
 #	write contents to csv
-	with open('reviews.csv', 'wb') as csvfile:
+	
+	if args.fname is None:
+		args.fname = 'reviews.csv'
+	with open(args.fname, 'wb') as csvfile:
 		writer = csv.writer(csvfile, dialect='excel')
 		writer.writerow(['Student Names', 'rating', 'date', 'votes', 'body'])
 		for i in range(0, len(studentNames)):
