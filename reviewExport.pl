@@ -25,18 +25,17 @@ def fixString(c):
 	nc = c
 	nc = re.sub(r"[\n\r]+", ' ', nc)
 	nc = re.sub(r"[ ]{2,}", ' ', nc)
+	nc = re.sub(r'^ +', '', nc)
+	nc = re.sub(r' +$', '', nc)
 
-	match = re.search(r"u'.*'", nc)
-	if match:
-		print "NORMALIZING " + match.group()
-		unicodedata.normalize('NFKD', nc).encode('ascii','ignore')
+	if type(nc) is unicode:
+		nc = unicodedata.normalize('NFKD', nc).encode('ascii','ignore')
 	return nc
 
 def main():
 	course =  handleArgs().src
 	rp = html.fromstring(requests.get(course + "?page=1#reviews").content)
 	pcount = int(rp.xpath('//input[@name="num_pages"]/@value')[0])
-	#print pcount
 
 	studentNames = []
 	ratings = []
@@ -50,37 +49,27 @@ def main():
 		studentNamesTemp = rp.xpath('//p[@class="userinfo__username"]/text()')
 		studentNamesTemp = [fixString(sn) for sn in studentNamesTemp]
 		for i in range(0, len(studentNamesTemp)):
-			sn = re.sub(r'[ \r\t\n]+', '', sn)
-			if not studentNamesTemp[i]:
-				studentNamesTemp[i] = "Student"
 			sn = fixString(sn)
+			if not studentNamesTemp[i] or studentNamesTemp[i] == ' ':
+				studentNamesTemp[i] = "Student"
 		studentNames.extend(studentNamesTemp)
-		#print studentNames
-		#print len(studentNames)
 
 #		parse student rating
 		ratings.extend(rp.xpath('//div[@class="review-body-info"]/span[@itemprop="reviewRating"]/meta[@itemprop="ratingValue"]/@content'))
-		#print ratings
-		#print len(ratings)
 
 #		parse publish date
 		dates.extend(rp.xpath('//time[@itemprop="datePublished"]/@datetime'))
-		#print dates
-		#print len(dates)
 
 #		parse vote count
 		votes.extend(rp.xpath('//span[@class="mini-poll-control__option-rating js-helpful__rating"]/text()'))
-		#print votes
-		#print len(votes)
+
+
 
 #		parse review body
 		bodiesTemp = rp.xpath('//div[@itemprop="reviewBody"]/text()')
 		bodiesTemp = [fixString(c) for c in bodiesTemp]
 		bodies.extend(bodiesTemp)
-		#print bodies
-		#print len(bodies)
 
-	print studentNames
 #	write contents to csv
 	with open('reviews.csv', 'wb') as csvfile:
 		writer = csv.writer(csvfile, dialect='excel')
