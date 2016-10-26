@@ -46,11 +46,23 @@ def main():
 		rp = html.fromstring(requests.get(course + "?page=" + str(i) + "#reviews").content)
 
 #		parse student names
-		studentNamesTemp = rp.xpath('//p[@class="userinfo__username"]/text()')
+		studentNameNodes= rp.xpath('//p[@class="userinfo__username"]/.')
+		studentNamesTemp = []
+
+		for sn in studentNameNodes:
+			snc = sn.find('a')
+			if snc is not None:
+				snc = snc.get('href')
+				if snc is not None:
+					studentNamesTemp.append('https://www.coursetalk.com' + snc)
+			else:
+				studentNamesTemp.append(sn.text)
+	
 		studentNamesTemp = [fixString(sn) for sn in studentNamesTemp]
+
 		for i in range(0, len(studentNamesTemp)):
 			sn = fixString(sn)
-			if not studentNamesTemp[i] or studentNamesTemp[i] == ' ':
+			if not studentNamesTemp[i]:
 				studentNamesTemp[i] = "Student"
 		studentNames.extend(studentNamesTemp)
 
@@ -74,7 +86,7 @@ def main():
 	with open('reviews.csv', 'wb') as csvfile:
 		writer = csv.writer(csvfile, dialect='excel')
 		writer.writerow(['Student Names', 'rating', 'date', 'votes', 'body'])
-		for i in range(0, len(bodies)):
+		for i in range(0, len(studentNames)):
 			writer.writerow([studentNames[i],ratings[i],dates[i],votes[i],bodies[i]])
 
 if __name__ == "__main__":
