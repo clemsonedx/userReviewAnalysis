@@ -18,7 +18,7 @@ def handleArgs():
 	"""
 	parser = argparse.ArgumentParser(description=descStr)
 	group = parser.add_argument_group()
-	group.add_argument('-s', dest='src', required=True, help="like to course review page (any)")
+	group.add_argument('-s', dest='src', required=True, help="link to course review page on CourseTalk")
 	group.add_argument('-n', dest='fname', required=False, help="output file name")
 	return parser.parse_args()
 
@@ -55,20 +55,18 @@ def main():
 		studentNamesTemp = []
 
 		for sn in studentNameNodes:
+			snt = sn.text
 			snc = sn.find('a')
 			if snc is not None:
 				snc = snc.get('href')
 				if snc is not None:
-					studentNamesTemp.append('https://www.coursetalk.com' + snc)
+					snt = 'https://www.coursetalk.com' + snc
+			if not snt:
+				snt = "Student"
 			else:
-				studentNamesTemp.append(sn.text)
+				snt = fixString(snt) 
+			studentNamesTemp.append(snt)
 	
-		studentNamesTemp = [fixString(sn) for sn in studentNamesTemp]
-
-		for i in range(0, len(studentNamesTemp)):
-			sn = fixString(sn)
-			if not studentNamesTemp[i]:
-				studentNamesTemp[i] = "Student"
 		studentNames.extend(studentNamesTemp)
 
 #		parse student rating
@@ -80,15 +78,12 @@ def main():
 #		parse vote count
 		votes.extend(rp.xpath('//span[@class="mini-poll-control__option-rating js-helpful__rating"]/text()'))
 
-
-
 #		parse review body
 		bodiesTemp = rp.xpath('//div[@itemprop="reviewBody"]/text()')
 		bodiesTemp = [fixString(c) for c in bodiesTemp]
 		bodies.extend(bodiesTemp)
 
 #	write contents to csv
-	
 	if args.fname is None:
 		args.fname = 'reviews.csv'
 	with open(args.fname, 'wb') as csvfile:
