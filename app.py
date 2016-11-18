@@ -6,6 +6,9 @@ from collections import defaultdict
 from operator import itemgetter
 import csv
 
+from Tkinter import *
+import ttk
+
 def handleArgs():
         descStr = """
         reads in user reviews and parses them
@@ -35,12 +38,12 @@ def parseReviews(fname):
 			ratings['high'].append(r)
 	for key, val in ratings.iteritems():
 		ratings[key] = sorted(val, key=itemgetter('votes', 'rating'), reverse=True)
+        print(ratings['low'])
 
-	print(ratings)
 
 def main():
-	args = handleArgs()
-	parseReviews(args.fname)
+    args = handleArgs()
+    parseReviews(args.fname)
 
 if __name__ == "__main__":
 	sys.exit(main())
