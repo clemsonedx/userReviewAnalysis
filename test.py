@@ -1,18 +1,31 @@
 #!/usr/bin/python2.7
 
+import unittest
+
 import csv
 import Review
 from Review import Review
 
-try:
-    r = csv.DictReader(open('excel.csv')).next()
-except IOError:
-    exit(1)
+class TestReview(unittest.TestCase):
+    reader = None
+    review = None
 
-review = Review(r)
-print(review.text)
-print('\n\n')
-print(review.tokenizedText)
-print('\n\n')
-print(review.taggedText)
+    @classmethod
+    def setUpClass(cls):
+        cls.reader = csv.DictReader(open('excel.csv'))
+        cls.review = Review(cls.reader.next())
 
+    def test_getPos(self):
+        posTupples = self.review.getPos()
+        self.assertTrue(len(posTupples) > 0)
+
+    def test_getWordCountDict(self):
+        countDict = {}
+        for key, count in self.review.getWordCountDict(['NN', 'NNS']).items():
+            if key in countDict:
+                countDict[key] = countDict[key] + 1
+            else:
+                countDict[key] = 1
+
+if __name__ == '__main__':
+    unittest.main()
